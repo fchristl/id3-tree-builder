@@ -1,7 +1,7 @@
 # ID3 Tree Builder
 
 This is a simple library that allows you to quickly generate decision trees based on examples. The
-algorithm used is a [ID3](https://en.wikipedia.org/wiki/ID3_algorithm).
+algorithm used is [ID3](https://en.wikipedia.org/wiki/ID3_algorithm).
 
 ## Installation
 
