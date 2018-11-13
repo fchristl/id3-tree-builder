@@ -1,5 +1,6 @@
 const Id3TreeBuilder = require('./index');
 const treeify = require('treeify');
+// examples taken from http://willkurt.github.io/ID3-Decision-Tree/
 const examples = [
     {'outlook': 'Sunny', 'temperature': 'Hot', 'humidity': 'High', 'wind': 'Weak', 'class': 'No'},
     {'outlook': 'Sunny', 'temperature': 'Hot', 'humidity': 'High', 'wind': 'Strong', 'class': 'No'},
