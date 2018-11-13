@@ -55,8 +55,8 @@ class Id3TreeBuilder {
     }
 
     getInformationGainWhenSplittingForAttribute(attribute, examples) {
-        const entropyForAttribute = this.getEntropyForAttribute(attribute, examples);
         const overallEntropy = this.getOverallEntropy(examples);
+        const entropyForAttribute = this.getEntropyForAttribute(attribute, examples);
         return overallEntropy - entropyForAttribute;
     }
 
