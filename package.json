@@ -1,0 +1,24 @@
+{
+  "name": "id3-tree-builder",
+  "version": "0.0.1",
+  "description": "Uses the Id3 algorithm to build a decision tree from examples",
+  "main": "index.js",
+  "repository": "https://github.com/fchristl/id3-tree-builder.git",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "treeify": "^1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "id3",
+    "decision",
+    "tree"
+  ],
+  "author": "Felix Christl",
+  "license": "BSD-3-Clause"
+}
