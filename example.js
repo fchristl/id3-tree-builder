@@ -18,4 +18,4 @@ const examples = [
     {'outlook': 'Rain', 'temperature': 'Mild', 'humidity': 'High', 'wind': 'Strong', 'class': 'No'}
 ];
 
-console.log(treeify.asTree(new Id3TreeBuilder().buildTreeFromExamples(examples), true));
+console.log(treeify.asTree(new Id3TreeBuilder().build(examples), true));

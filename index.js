@@ -5,7 +5,7 @@ class Id3TreeBuilder {
     constructor() {
     }
 
-    buildTreeFromExamples(examples) {
+    build(examples) {
         if (examples.length === 0) {
             throw new Error('no examples provided');
         }
@@ -30,7 +30,7 @@ class Id3TreeBuilder {
                     delete newExample[attribute];
                     return newExample;
                 });
-            newNodeForAttribute.add(this.buildTreeFromExamples(reducedExamples));
+            newNodeForAttribute.add(this.build(reducedExamples));
         }
 
         return node;
