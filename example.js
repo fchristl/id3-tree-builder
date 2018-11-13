@@ -1,4 +1,4 @@
-const id3 = require('./index');
+const Id3TreeBuilder = require('./index');
 const treeify = require('treeify');
 const examples = [
     {'outlook': 'Sunny', 'temperature': 'Hot', 'humidity': 'High', 'wind': 'Weak', 'class': 'No'},
@@ -17,4 +17,4 @@ const examples = [
     {'outlook': 'Rain', 'temperature': 'Mild', 'humidity': 'High', 'wind': 'Strong', 'class': 'No'}
 ];
 
-console.log(treeify.asTree(id3(examples), true));
+console.log(treeify.asTree(new Id3TreeBuilder().buildTreeFromExamples(examples), true));

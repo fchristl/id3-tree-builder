@@ -1,116 +1,135 @@
 const Tree = require('./lib/tree');
 
+class Id3TreeBuilder {
 
-function id3(examples) {
-    const node = new Tree();
-    if (examples.length === 0) {
+    constructor() {
+    }
+
+    buildTreeFromExamples(examples) {
+        if (examples.length === 0) {
+            throw new Error('no examples provided');
+        }
+        const attributeWithHighestGain = this.getAttributeWithHighestGain(examples);
+        if (attributeWithHighestGain == null) {
+            return this.getMostUsedClassInExamples(examples);
+        }
+
+        return this.createTreeForAttribute(attributeWithHighestGain, examples);
+    }
+
+    createTreeForAttribute(attribute, examples) {
+        const node = new Tree(attribute);
+
+        const valuesForAttribute = this.getValuesForAttribute(attribute, examples);
+
+        for (const valueForAttribute of valuesForAttribute) {
+            const newNodeForAttribute = node.add(valueForAttribute);
+            const reducedExamples = this.getExamplesWithValueForAttribute(valueForAttribute, attribute, examples)
+                .map(example => {
+                    const newExample = {...example};
+                    delete newExample[attribute];
+                    return newExample;
+                });
+            newNodeForAttribute.add(this.buildTreeFromExamples(reducedExamples));
+        }
+
         return node;
     }
-    const attributes = getAvailableAttributes(examples[0]);
-    let attributeWithHighestGain = null, highestGain = 0;
-    for (const attribute of attributes) {
-        const gain = getInformationGainWhenSplittingForAttribute(attribute, examples);
-        if (gain > highestGain) {
-            highestGain = gain;
-            attributeWithHighestGain = attribute;
+
+
+    getAttributeWithHighestGain(examples) {
+        const availableAttributes = this.getAvailableAttributes(examples[0]);
+        let attributeWithHighestGain = null, highestGain = 0;
+        for (const attribute of availableAttributes) {
+            const gain = this.getInformationGainWhenSplittingForAttribute(attribute, examples);
+            if (gain > highestGain) {
+                highestGain = gain;
+                attributeWithHighestGain = attribute;
+            }
         }
+        return attributeWithHighestGain;
     }
-    if (attributeWithHighestGain == null) {
-        return getMostUsedClassInExamples(examples);
+
+    getAvailableAttributes(example) {
+        return Object.keys(example).filter(key => key !== 'class');
     }
-    node.value = attributeWithHighestGain;
-    const valuesForAttribute = getValuesForAttribute(attributeWithHighestGain, examples);
-    for (const valueForAttribute of valuesForAttribute) {
-        const newNodeForAttribute = node.add(valueForAttribute);
-        const reducedExamples = getExamplesWithValueForAttribute(valueForAttribute, attributeWithHighestGain, examples)
-            .map(example => {
-                const newExample = {...example};
-                delete newExample[attributeWithHighestGain];
-                return newExample;
-            });
-        newNodeForAttribute.add(id3(reducedExamples));
+
+    getInformationGainWhenSplittingForAttribute(attribute, examples) {
+        const entropyForAttribute = this.getEntropyForAttribute(attribute, examples);
+        const overallEntropy = this.getOverallEntropy(examples);
+        return overallEntropy - entropyForAttribute;
     }
-    return node;
-}
 
-function getAvailableAttributes(example) {
-    return Object.keys(example).filter(key => key !== 'class');
-}
+    getOverallEntropy(examples) {
+        const classes = this.getClassesInExamples(examples);
+        let entropy = 0;
+        classes.forEach(classToCheck => {
+            const numberOfExamplesWithClass = this.getNumberOfExamplesWithClass(classToCheck, examples);
+            const pi = numberOfExamplesWithClass / examples.length;
+            entropy += -pi * Math.log2(pi);
+        });
+        return entropy;
+    }
 
-function getInformationGainWhenSplittingForAttribute(attribute, examples) {
-    const entropyForAttribute = getEntropyForAttribute(attribute, examples);
-    const overallEntropy = getOverallEntropy(examples);
-    return overallEntropy - entropyForAttribute;
-}
+    getEntropyForAttribute(attribute, examples) {
+        const values = this.getValuesForAttribute(attribute, examples);
+        let entropy = 0;
+        values.forEach(value => {
+            const entropyForValue = this.getEntropyForAttributeAndValue(attribute, value, examples);
+            const examplesWithThisValue = this.getExamplesWithValueForAttribute(value, attribute, examples);
+            entropy += (examplesWithThisValue.length / examples.length) * entropyForValue;
+        });
+        return entropy;
+    }
 
-function getOverallEntropy(examples) {
-    const classes = getClassesInExamples(examples);
-    let entropy = 0;
-    classes.forEach(classToCheck => {
-        const numberOfExamplesWithClass = getNumberOfExamplesWithClass(classToCheck, examples);
-        const pi = numberOfExamplesWithClass / examples.length;
-        entropy += -pi * Math.log2(pi);
-    });
-    return entropy;
-}
+    getEntropyForAttributeAndValue(attribute, value, examples) {
+        const relevantExamples = this.getExamplesWithValueForAttribute(value, attribute, examples);
+        const classesInRelevantExamples = this.getClassesInExamples(relevantExamples);
+        let entropy = 0;
+        classesInRelevantExamples.forEach(classToCheck => {
+            const classCount = this.getNumberOfExamplesWithClass(classToCheck, relevantExamples);
+            const pi = classCount / relevantExamples.length;
+            entropy += -pi * Math.log2(pi);
+        });
+        return entropy;
+    }
 
-function getEntropyForAttribute(attribute, examples) {
-    const values = getValuesForAttribute(attribute, examples);
-    let entropy = 0;
-    values.forEach(value => {
-        const entropyForValue = getEntropyForAttributeAndValue(attribute, value, examples);
-        const examplesWithThisValue = getExamplesWithValueForAttribute(value, attribute, examples);
-        entropy += (examplesWithThisValue.length / examples.length) * entropyForValue;
-    });
-    return entropy;
-}
+    getValuesForAttribute(attribute, examples) {
+        const values = [];
+        examples.forEach(example => {
+            if (values.indexOf(example[attribute]) === -1) {
+                values.push(example[attribute]);
+            }
+        });
+        return values;
 
-function getEntropyForAttributeAndValue(attribute, value, examples) {
-    const relevantExamples = getExamplesWithValueForAttribute(value, attribute, examples);
-    const classesInRelevantExamples = getClassesInExamples(relevantExamples);
-    let entropy = 0;
-    classesInRelevantExamples.forEach(classToCheck => {
-        const classCount = getNumberOfExamplesWithClass(classToCheck, relevantExamples);
-        const pi = classCount / relevantExamples.length;
-        entropy += -pi * Math.log2(pi);
-    });
-    return entropy;
-}
+    }
 
-function getValuesForAttribute(attribute, examples) {
-    const values = [];
-    examples.forEach(example => {
-        if (values.indexOf(example[attribute]) === -1) {
-            values.push(example[attribute]);
+    getExamplesWithValueForAttribute(value, attribute, examples) {
+        return examples.filter(example => example[attribute] === value);
+    }
+
+    getClassesInExamples(examples) {
+        return this.getValuesForAttribute('class', examples);
+    }
+
+    getNumberOfExamplesWithClass(classToCheck, examples) {
+        return this.getExamplesWithValueForAttribute(classToCheck, 'class', examples).length;
+    }
+
+    getMostUsedClassInExamples(examples) {
+        const availableClasses = this.getClassesInExamples(examples);
+        let maxCount = 0, mostUsedClass = null;
+        for (const availableClass of availableClasses) {
+            const count = this.getNumberOfExamplesWithClass(availableClass, examples);
+            if (count > maxCount) {
+                maxCount = count;
+                mostUsedClass = availableClass;
+            }
         }
-    });
-    return values;
-
-}
-
-function getExamplesWithValueForAttribute(value, attribute, examples) {
-    return examples.filter(example => example[attribute] === value);
-}
-
-function getClassesInExamples(examples) {
-    return getValuesForAttribute('class', examples);
-}
-
-function getNumberOfExamplesWithClass(classToCheck, examples) {
-    return getExamplesWithValueForAttribute(classToCheck, 'class', examples).length;
-}
-
-function getMostUsedClassInExamples(examples) {
-    const availableClasses = getClassesInExamples(examples);
-    let maxCount = 0, mostUsedClass = null;
-    for (const availableClass of availableClasses) {
-        const count = getNumberOfExamplesWithClass(availableClass, examples);
-        if (count > maxCount) {
-            maxCount = count;
-            mostUsedClass = availableClass;
-        }
+        return mostUsedClass;
     }
-    return mostUsedClass;
+
 }
 
-module.exports = id3;
+module.exports = Id3TreeBuilder;
